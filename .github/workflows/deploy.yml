@@ -49,8 +49,8 @@ jobs:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
           TWINE_REPOSITORY: testpypi
-        run: twine --help
-#        run: twine upload dist/*
+#        run: twine --help
+        run: twine upload dist/*
 
       - name: Upload to PyPI (tagged release)
         if: github.ref_type == 'tag'
@@ -58,5 +58,5 @@ jobs:
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-        run: twine --help
-#        run: twine upload dist/*
+#        run: twine --help
+        run: twine upload dist/*
