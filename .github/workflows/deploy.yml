@@ -36,7 +36,7 @@ jobs:
           pip install black flake8 pytest
           black --check .
           flake8 .
-          pytest tests/
+          pytest ${{ matrix.package }}/tests/
 
       - name: Build package
         working-directory: ${{ matrix.package }}
