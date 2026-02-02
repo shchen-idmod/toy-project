@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61", "setuptools-scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "toy_package_b"
+dynamic = ["version"]               # ← this enables setuptools-scm
+description = "Toy Package B – simple test package"
+readme = {file = "README.md", content-type = "text/markdown"}
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [{name = "Sharon Chen", email = "shchen@idmod.org"}]
+keywords = ["toy", "example"]
+
+[project.urls]
+Repository = "https://github.com/your-username/toy-project"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["toy_package_b*"]
+
+[tool.setuptools_scm]
+# Optional: customize if you want (defaults are usually fine)
+version_scheme = "guess-next-dev"
+local_scheme = "node-and-date"
+fallback_version = "0.0.0.dev0"      # ← use this when no git is found
+#
+#
+#[tool.setuptools_scm]
+#fallback_version = "0.0.0.dev0"      # ← use this when no git is found
+#local_scheme = "no-local-version"     # optional: makes dev versions cleaner (no +gHASH)

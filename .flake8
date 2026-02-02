@@ -1,0 +1,16 @@
+[flake8]
+ignore = E501,W291,D205,D212,D200,D411,D105,E722
+# exclude prototypes, docs, test and misc code from linting
+exclude =
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    env,
+    .tox,
+    build_all.py,
+    dist,
+    *.egg-info,
+    .pytest_cache
+# enforce docstrings
+docstring-convention = google
