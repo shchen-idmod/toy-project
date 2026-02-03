@@ -1,8 +1,7 @@
 import unittest
 import subprocess
 import sys
-from unittest.mock import patch, MagicMock
-import importlib
+from unittest.mock import patch
 
 
 class TestVersion(unittest.TestCase):
@@ -95,10 +94,13 @@ class TestVersion(unittest.TestCase):
 
             # Version should start with the git tag version
             # (might have .devN+hash suffix if there are commits after tag)
+            tag_matches = (
+                version.startswith(git_tag) or  # noqa W504
+                version.startswith(git_tag.split('.')[0])
+            )
             self.assertTrue(
-                version.startswith(git_tag)
-                or version.startswith(git_tag.split(".")[0]),
-                f"Version '{version}' should be based on git tag '{git_tag}'",
+                tag_matches,
+                f"Version '{version}' should be based on git tag '{git_tag}'"
             )
         except subprocess.CalledProcessError:
             self.skipTest("No git tags found or not in a git repository")

@@ -1,8 +1,7 @@
 import unittest
 import subprocess
 import sys
-from unittest.mock import patch, MagicMock
-import importlib
+from unittest.mock import patch
 
 
 class TestVersion(unittest.TestCase):
@@ -97,7 +96,7 @@ class TestVersion(unittest.TestCase):
             # (might have .devN+hash suffix if there are commits after tag)
             self.assertTrue(
                 version.startswith(git_tag)
-                or version.startswith(git_tag.split(".")[0]),
+                or version.startswith(git_tag.split(".")[0]),  # noqa W503
                 f"Version '{version}' should be based on git tag '{git_tag}'",
             )
         except subprocess.CalledProcessError:
