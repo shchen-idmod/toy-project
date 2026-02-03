@@ -42,21 +42,43 @@ jobs:
         working-directory: ${{ matrix.package }}
         run: python -m build
 
-      - name: Upload to TestPyPI (dev / non-tagged)
+      - name: Publish to TestPyPI (dev / non-tagged)
         if: github.ref_type != 'tag'
-        working-directory: ${{ matrix.package }}
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
-          TWINE_REPOSITORY: testpypi
-#        run: twine --help
-        run: twine upload dist/*
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          repository-url: https://test.pypi.org/legacy/
+          packages-dir: ${{ matrix.package }}/dist/
+          skip-existing: true          # ← ignores 400 if file exists
+          verbose: true
 
-      - name: Upload to PyPI (tagged release)
+      - name: Publish to PyPI (tagged release)
         if: github.ref_type == 'tag'
-        working-directory: ${{ matrix.package }}
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-#        run: twine --help
-        run: twine upload dist/*
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          repository-url: https://upload.pypi.org/legacy/
+          packages-dir: ${{ matrix.package }}/dist/
+          verbose: true
+#      - name: Upload to TestPyPI (dev / non-tagged)
+#        if: github.ref_type != 'tag'
+#        working-directory: ${{ matrix.package }}
+#        env:
+#          TWINE_USERNAME: __token__
+#          TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
+#          TWINE_REPOSITORY: testpypi
+##        run: twine --help
+#        run: twine upload dist/*
+
+#      - name: Upload to PyPI (tagged release)
+#        if: github.ref_type == 'tag'
+#        working-directory: ${{ matrix.package }}
+#        env:
+#          TWINE_USERNAME: __token__
+#          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+##        run: twine --help
+#        run: twine upload dist/*
+#        verbose: true
+#        skip-existing: true
