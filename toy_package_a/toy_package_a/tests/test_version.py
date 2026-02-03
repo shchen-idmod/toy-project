@@ -11,7 +11,7 @@ class TestVersion(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         # Store the original module if already imported
-        self.module_name = 'toy_package_a'  # Change to your package name
+        self.module_name = "toy_package_a"  # Change to your package name
         if self.module_name in sys.modules:
             self.original_module = sys.modules[self.module_name]
         else:
@@ -28,17 +28,20 @@ class TestVersion(unittest.TestCase):
     def test_version_exists(self):
         """Test that __version__ attribute exists."""
         import toy_package_a  # Change to your package name
-        self.assertTrue(hasattr(toy_package_a, '__version__'))
+
+        self.assertTrue(hasattr(toy_package_a, "__version__"))
         self.assertIsInstance(toy_package_a.__version__, str)
 
     def test_version_not_empty(self):
         """Test that version is not empty."""
         import toy_package_a
+
         self.assertGreater(len(toy_package_a.__version__), 0)
 
     def test_version_format(self):
         """Test that version follows semantic versioning pattern."""
         import toy_package_a
+
         version = toy_package_a.__version__
 
         # Should match patterns like:
@@ -47,8 +50,8 @@ class TestVersion(unittest.TestCase):
         # - 0.0.0+unknown (fallback)
         self.assertRegex(
             version,
-            r'^\d+\.\d+\.\d+',
-            f"Version '{version}' should start with semantic versioning pattern"
+            r"^\d+\.\d+\.\d+",
+            f"Version '{version}' should start with semantic versioning pattern",
         )
 
     def test_version_matches_metadata(self):
@@ -61,11 +64,13 @@ class TestVersion(unittest.TestCase):
         import toy_package_a
 
         try:
-            metadata_version = version("toy-package-a")  # Change to your package name on PyPI
+            metadata_version = version(
+                "toy-package-a"
+            )  # Change to your package name on PyPI
             self.assertEqual(
                 toy_package_a.__version__,
                 metadata_version,
-                "Package __version__ should match metadata version"
+                "Package __version__ should match metadata version",
             )
         except Exception as e:
             # If package not installed properly, skip this test
@@ -76,22 +81,24 @@ class TestVersion(unittest.TestCase):
         try:
             # Get the latest git tag
             result = subprocess.run(
-                ['git', 'describe', '--tags', '--abbrev=0'],
+                ["git", "describe", "--tags", "--abbrev=0"],
                 capture_output=True,
                 text=True,
                 check=True,
-                cwd='.'
+                cwd=".",
             )
-            git_tag = result.stdout.strip().lstrip('v')
+            git_tag = result.stdout.strip().lstrip("v")
 
             import toy_package_a
+
             version = toy_package_a.__version__
 
             # Version should start with the git tag version
             # (might have .devN+hash suffix if there are commits after tag)
             self.assertTrue(
-                version.startswith(git_tag) or version.startswith(git_tag.split('.')[0]),
-                f"Version '{version}' should be based on git tag '{git_tag}'"
+                version.startswith(git_tag)
+                or version.startswith(git_tag.split(".")[0]),
+                f"Version '{version}' should be based on git tag '{git_tag}'",
             )
         except subprocess.CalledProcessError:
             self.skipTest("No git tags found or not in a git repository")
@@ -101,7 +108,7 @@ class TestVersion(unittest.TestCase):
     def test_fallback_version_on_import_error(self):
         """Test that fallback version is used when package not installed."""
         # Mock the version import to raise PackageNotFoundError
-        with patch('importlib.metadata.version') as mock_version:
+        with patch("importlib.metadata.version") as mock_version:
             # Simulate PackageNotFoundError
             try:
                 from importlib.metadata import PackageNotFoundError
@@ -134,15 +141,16 @@ class TestVersion(unittest.TestCase):
     def test_version_increments_with_commits(self):
         """Test that version reflects the git repository state."""
         import toy_package_a
+
         version = toy_package_a.__version__
 
         try:
             # Get git describe output to understand the version context
             result = subprocess.run(
-                ['git', 'describe', '--tags', '--long', '--dirty'],
+                ["git", "describe", "--tags", "--long", "--dirty"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                text=True
+                text=True,
             )
 
             if result.returncode == 0:
@@ -151,16 +159,16 @@ class TestVersion(unittest.TestCase):
                 # Just verify that version is valid - setuptools-scm handles the mapping
                 self.assertRegex(
                     version,
-                    r'^\d+\.\d+\.\d+',
-                    f"Version '{version}' should start with semantic versioning (git: {git_describe})"
+                    r"^\d+\.\d+\.\d+",
+                    f"Version '{version}' should start with semantic versioning (git: {git_describe})",
                 )
 
                 # Verify version is consistent with git state
                 # (This is informational - setuptools-scm can use different schemes)
-                parts = git_describe.lstrip('v').split('-')
+                parts = git_describe.lstrip("v").split("-")
                 if len(parts) >= 2:
                     commits_since_tag = int(parts[1])
-                    if commits_since_tag == 0 and 'dirty' not in git_describe:
+                    if commits_since_tag == 0 and "dirty" not in git_describe:
                         # On a clean tag - version can be X.Y.Z or X.Y.Z.postN.devM
                         # (depending on setuptools-scm configuration)
                         pass  # Accept any valid version
@@ -171,7 +179,7 @@ class TestVersion(unittest.TestCase):
             else:
                 # Git describe failed - might be no tags yet
                 # Just verify basic version format
-                self.assertRegex(version, r'^\d+\.\d+\.\d+')
+                self.assertRegex(version, r"^\d+\.\d+\.\d+")
 
         except FileNotFoundError:
             self.skipTest("Git not available")
@@ -183,16 +191,25 @@ class TestVersionCLI(unittest.TestCase):
     def test_version_via_python_m(self):
         """Test getting version via python -m."""
         result = subprocess.run(
-            [sys.executable, '-c',
-             'import toy_package_a; print(toy_package_a.__version__)'],
+            [
+                sys.executable,
+                "-c",
+                "import toy_package_a; print(toy_package_a.__version__)",
+            ],
             capture_output=True,
-            text=True
+            text=True,
         )
 
-        self.assertEqual(result.returncode, 0, "Should successfully import and print version")
-        self.assertGreater(len(result.stdout.strip()), 0, "Should output version string")
-        self.assertRegex(result.stdout.strip(), r'^\d+\.\d+\.\d+', "Should output valid version")
+        self.assertEqual(
+            result.returncode, 0, "Should successfully import and print version"
+        )
+        self.assertGreater(
+            len(result.stdout.strip()), 0, "Should output version string"
+        )
+        self.assertRegex(
+            result.stdout.strip(), r"^\d+\.\d+\.\d+", "Should output valid version"
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
