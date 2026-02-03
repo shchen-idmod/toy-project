@@ -46,6 +46,8 @@ jobs:
 
       - name: Build package
         working-directory: ${{ matrix.package }}
+        env:
+          SETUPTOOLS_SCM_LOCAL_SCHEME_OVERRIDE: no-local-version
         run: python -m build
 
       - name: Publish to TestPyPI (dev / non-tagged)
