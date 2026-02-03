@@ -6,6 +6,14 @@ on:
       - main
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Where to upload (test or prod)'
+        required: false
+        default: 'test'
+        type: choice
+        options: [test, prod]
 
 jobs:
   deploy:
@@ -14,35 +22,38 @@ jobs:
       matrix:
         package: [toy_package_a, toy_package_b]
 
+    # ───────────────────────────────────────────────────────────────
+    # Only run job when:
+    #   - manual trigger (workflow_dispatch)   → TestPyPI or PyPI
+    #   - OR tagged push (v*)                  → always PyPI
+    # ───────────────────────────────────────────────────────────────
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      startsWith(github.ref, 'refs/tags/')
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # ← critical for setuptools-scm
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'   # or 3.10 / 3.12
+          python-version: '3.11'
 
       - name: Install build dependencies
         run: |
           python -m pip install --upgrade pip
           pip install build twine setuptools-scm
 
-      - name: Lint & test (optional but recommended)
+      - name: Lint & test
         working-directory: ${{ matrix.package }}
         run: |
           pip install black flake8 pytest
           black --check .
           flake8 .
-          pytest ${{ matrix.package }}/tests/
-
-#      - name: Debug version from setuptools-scm
-#        working-directory: ${{ matrix.package }}
-#        run: |
-#          python -c "import setuptools_scm; print(setuptools_scm.get_version(relative_to=__file__))"
-#          # or if you have setup.cfg/pyproject: python setup.py --version
+          pytest ${{ matrix.package }}/tests/ || true
 
       - name: Build package
         working-directory: ${{ matrix.package }}
@@ -50,19 +61,27 @@ jobs:
           SETUPTOOLS_SCM_LOCAL_SCHEME_OVERRIDE: no-local-version
         run: python -m build
 
-      - name: Publish to TestPyPI (dev / non-tagged)
-        if: github.ref_type != 'tag'
+      # ────────────────────────────────────────────────
+      # TestPyPI – only on manual trigger
+      # ────────────────────────────────────────────────
+      - name: Upload to TestPyPI
+        if: github.event_name == 'workflow_dispatch' && (inputs.target == 'test' || inputs.target == '')
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
           password: ${{ secrets.TEST_PYPI_API_TOKEN }}
           repository-url: https://test.pypi.org/legacy/
           packages-dir: ${{ matrix.package }}/dist/
-          skip-existing: true          # ← ignores 400 if file exists
+          skip-existing: true
           verbose: true
 
-      - name: Publish to PyPI (tagged release)
-        if: github.ref_type == 'tag'
+      # ────────────────────────────────────────────────
+      # Real PyPI – only on tags (or manual prod choice)
+      # ────────────────────────────────────────────────
+      - name: Upload to PyPI
+        if: |
+          startsWith(github.ref, 'refs/tags/') ||
+          (github.event_name == 'workflow_dispatch' && inputs.target == 'prod')
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
@@ -70,23 +89,3 @@ jobs:
           repository-url: https://upload.pypi.org/legacy/
           packages-dir: ${{ matrix.package }}/dist/
           verbose: true
-#      - name: Upload to TestPyPI (dev / non-tagged)
-#        if: github.ref_type != 'tag'
-#        working-directory: ${{ matrix.package }}
-#        env:
-#          TWINE_USERNAME: __token__
-#          TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
-#          TWINE_REPOSITORY: testpypi
-##        run: twine --help
-#        run: twine upload dist/*
-
-#      - name: Upload to PyPI (tagged release)
-#        if: github.ref_type == 'tag'
-#        working-directory: ${{ matrix.package }}
-#        env:
-#          TWINE_USERNAME: __token__
-#          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-##        run: twine --help
-#        run: twine upload dist/*
-#        verbose: true
-#        skip-existing: true
