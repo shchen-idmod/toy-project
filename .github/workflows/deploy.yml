@@ -38,6 +38,12 @@ jobs:
           flake8 .
           pytest ${{ matrix.package }}/tests/
 
+      - name: Debug version from setuptools-scm
+        working-directory: ${{ matrix.package }}
+        run: |
+          python -c "import setuptools_scm; print(setuptools_scm.get_version())"
+          # or if you have setup.cfg/pyproject: python setup.py --version
+
       - name: Build package
         working-directory: ${{ matrix.package }}
         run: python -m build
