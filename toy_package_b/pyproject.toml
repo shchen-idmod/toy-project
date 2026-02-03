@@ -21,7 +21,8 @@ include = ["toy_package_b*"]
 
 [tool.setuptools_scm]
 # Optional: customize if you want (defaults are usually fine)
-version_scheme = "guess-next-dev"
+#version_scheme = "guess-next-dev"
+version_scheme = "release-branch-semver"
 local_scheme = "node-and-date"
 fallback_version = "0.0.0.dev0"      # ← use this when no git is found
 #
