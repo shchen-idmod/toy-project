@@ -1,3 +1,13 @@
 from .hello_a import hello_a  # noqa: F401
 
-__version__: str = "0.0.0"
+try:
+    from importlib.metadata import version, PackageNotFoundError
+except ImportError:
+    # Python < 3.8
+    from importlib_metadata import version, PackageNotFoundError
+
+try:
+    __version__ = version("toy-package-a")  # Use your actual package name
+except PackageNotFoundError:
+    # Package not installed, use fallback
+    __version__ = "0.0.0+unknown"
