@@ -41,7 +41,7 @@ jobs:
       - name: Debug version from setuptools-scm
         working-directory: ${{ matrix.package }}
         run: |
-          python -c "import setuptools_scm; print(setuptools_scm.get_version())"
+          python -c "import setuptools_scm; print(setuptools_scm.get_version(relative_to=__file__))"
           # or if you have setup.cfg/pyproject: python setup.py --version
 
       - name: Build package
