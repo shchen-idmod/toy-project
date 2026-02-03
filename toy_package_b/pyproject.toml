@@ -20,6 +20,7 @@ where = ["."]
 include = ["toy_package_b*"]
 
 [tool.setuptools_scm]
+search_parent_directories = true
 # Optional: customize if you want (defaults are usually fine)
 #version_scheme = "guess-next-dev"
 version_scheme = "release-branch-semver"

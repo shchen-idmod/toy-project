@@ -20,6 +20,7 @@ where = ["."]
 include = ["toy_package_a*"]
 
 [tool.setuptools_scm]
+search_parent_directories = true
 # Optional: customize if you want (defaults are usually fine)
 version_scheme = "release-branch-semver"
 local_scheme = "node-and-date"
