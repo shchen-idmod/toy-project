@@ -1,5 +1,4 @@
 name: Deploy Packages
-
 on:
   push:
     branches: [main]
@@ -14,32 +13,25 @@ on:
         options: [test, prod]
 
 jobs:
-
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         package: [toy_package_a, toy_package_b]
-
-    # Run on manual trigger OR tag
     if: |
       github.event_name == 'workflow_dispatch' ||
       startsWith(github.ref, 'refs/tags/')
-
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install build setuptools-scm
-
       - name: Lint & test
         working-directory: ${{ matrix.package }}
         run: |
@@ -47,12 +39,19 @@ jobs:
           black --check .
           flake8 .
           pytest ${{ matrix.package }}/tests/ || true
-
       - name: Build
         working-directory: ${{ matrix.package }}
         env:
           SETUPTOOLS_SCM_LOCAL_SCHEME_OVERRIDE: no-local-version
         run: python -m build
+
+      # Upload artifacts for the publish job
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ matrix.package }}
+          path: ${{ matrix.package }}/dist/
+          retention-days: 1
 
       - name: Upload to TestPyPI
         if: github.event_name == 'workflow_dispatch' && inputs.target == 'test'
@@ -68,38 +67,23 @@ jobs:
   publish-to-pypi:
     needs: build
     runs-on: ubuntu-latest
-    environment: pypi                    # ← Manual approval required here
+    environment: deploy_pypi  # Manual approval required here
     if: startsWith(github.ref, 'refs/tags/')
-
     strategy:
       matrix:
         package: [toy_package_a, toy_package_b]
-
     steps:
-      - uses: actions/checkout@v4
+      # Download the pre-built artifacts
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
         with:
-          fetch-depth: 0
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install build dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install build setuptools-scm
-
-      - name: Build
-        working-directory: ${{ matrix.package }}
-        env:
-          SETUPTOOLS_SCM_LOCAL_SCHEME_OVERRIDE: no-local-version
-        run: python -m build
+          name: dist-${{ matrix.package }}
+          path: dist/
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
-          repository-url: https://upload.pypi.org/legacy/
-          packages-dir: ${{ matrix.package }}/dist/
+          packages-dir: dist/
           verbose: true
